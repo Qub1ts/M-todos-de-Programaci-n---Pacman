@@ -27,6 +27,7 @@ typedef struct fantasma{
     int vy;
     int comible;
     char atravesado;
+    int tempSpawn;
     //temporizador de spawneo
 }ghost;
 
@@ -119,6 +120,10 @@ int main() {
     cord pacmanSpawn;
     // Coordenadas del punto de aparición de los fantasmas en el laberinto
     cord ghostSpawn;
+    // Coordenadas del pasillo 1
+    cord pasillo1;
+    // Coordenadas del pasillo 2
+    cord pasillo2;
 
     // Conteo de los puntos totales que estan esparcidos en el laberinto
     int conteoPuntitosEnMapa = 0;
@@ -130,7 +135,7 @@ int main() {
     // Obtiene los carácters del archivo
     for (int i=1;i<filas+1;i++){
         for (int j=1;j<columnas+1;j++){
-            caracter = fgetc(fp);
+            caracter = fgetc(fp); //file get caracter
             if (caracter == 'x') {
                 laberinto[i][j] = '.';
                 conteoPuntitosEnMapa += 1;
@@ -139,14 +144,25 @@ int main() {
                 conteoPuntitosEnMapa += 1;
             } else if (caracter == 'w') {
                 laberinto[i][j] = '#';
+            // Pasillo    
             } else if (caracter == 'P') {
-                laberinto[i][j] = '*';
+                laberinto[i][j] = ' ';
+                if (j == 17) {
+                    laberinto[i][18] = ' ';
+                    pasillo2.x = i;
+                    pasillo2.y = 18;
+                } 
+                if (j == 1) {
+                    laberinto[i][0] = ' ';
+                    pasillo1.x = i;
+                    pasillo1.y = 0;
+                }
             } else if (caracter == 'p') {
                 laberinto[i][j] = 'C';
                 pacmanSpawn.x = i; // Se guardan las coordenadas del punto de aparición de Pacman
                 pacmanSpawn.y = j;
             } else if (caracter == 'S') {
-                laberinto[i][j] = 'F';
+                laberinto[i][j] = ' ';
                 ghostSpawn.x = i; // Se guardan las coordenadas del punto de aparición de los fantasmas
                 ghostSpawn.y = j;
             } else if (caracter == ' ') {
@@ -193,27 +209,31 @@ int main() {
         // INICIALIZANDO FANTASMAS
         blinky.nombre = "Blinky";         // 8
         blinky.coordenadas = ghostSpawn;
-        blinky.vx = 0;
+        blinky.vx = -1;
         blinky.vy = 0;
         blinky.comible = 0;
+        blinky.tempSpawn = 0;
 
         pinky.nombre = "Pinky";           // M
         pinky.coordenadas = ghostSpawn;
-        pinky.vx = 0;
+        pinky.vx = -1;
         pinky.vy = 0;
         pinky.comible = 0;
+        pinky.tempSpawn = 3;
 
         inky.nombre = "Inky";            // K
         inky.coordenadas = ghostSpawn;
-        inky.vx = 0;
+        inky.vx = -1;
         inky.vy = 0;
         inky.comible = 0;
+        inky.tempSpawn = 6;
 
         clyde.nombre = "Clyde";          // E
         clyde.coordenadas = ghostSpawn;
-        clyde.vx = 0;
+        clyde.vx = -1;
         clyde.vy = 0;
         clyde.comible = 0;
+        clyde.tempSpawn = 9;
 
         //char ch;
         int finDelJuego = 0;
@@ -246,31 +266,35 @@ int main() {
                 pacmanX.vy = 0; // Se reinicia el movimiento de Pacman
 
                 blinky.coordenadas = ghostSpawn;
-                blinky.vx = 0;
+                blinky.vx = -1;
                 blinky.vy = 0;
                 blinky.comible = 0;
                 blinky.atravesado = ' ';
+                blinky.tempSpawn = 0;
                 // Reinicio de temporizador de spawn
 
                 pinky.coordenadas = ghostSpawn;
-                pinky.vx = 0;
+                pinky.vx = -1;
                 pinky.vy = 0;
                 pinky.comible = 0;
                 pinky.atravesado = ' ';
+                pinky.tempSpawn = 3;
                 // Reinicio de temporizador de spawn
 
                 inky.coordenadas = ghostSpawn;
-                inky.vx = 0;
+                inky.vx = -1;
                 inky.vy = 0;
                 inky.comible = 0;
                 inky.atravesado = ' ';
+                inky.tempSpawn = 6;
                 // Reinicio de temporizador de spawn
 
                 clyde.coordenadas = ghostSpawn;
-                clyde.vx = 0;
+                clyde.vx = -1;
                 clyde.vy = 0;
                 clyde.comible = 0;
                 clyde.atravesado = ' ';
+                clyde.tempSpawn = 9;
                 // Reinicio de temporizador de spawn
             
                 conteoPuntitosAux = conteoPuntitosEnMapa; // Reinicio de la cuenta de puntitos comidos.
@@ -287,17 +311,17 @@ int main() {
                 pacmanX.vy = 0; // Se reinicia el movimiento de Pacman
                 // a = 97; d = 100; w = 119; s = 115
                 switch(ch) {
-                    case 97:
+                    case 97: // A
                         pacmanX.vy = -1;
                         break;
-                    case 100:
+                    case 100: // D
                         pacmanX.vy = 1;
                         break;
-                    case 119:
+                    case 119: // W
                         pacmanX.vx = -1;
                         Sleep(50);
                         break;
-                    case 115:
+                    case 115: // S
                         pacmanX.vx = 1;
                         Sleep(50);
                         break;
@@ -330,20 +354,22 @@ int main() {
                 laberintoAux[pacmanX.coordenadas.x][pacmanX.coordenadas.y] = ' ';
                 pacmanX.coordenadas.x = lx;
                 pacmanX.coordenadas.y = ly;
-            // PASILLO (PENDIENTE)
-            } else if (laberintoAux[lx][ly] == '*') {
-                pacmanX.score += 7;
-                laberintoAux[lx][ly] = 'C';
+            // PASILLO 1
+            } else if (lx == pasillo1.x && ly == pasillo1.y)  {
+                laberintoAux[pasillo2.x][pasillo2.y] = 'C';
                 laberintoAux[pacmanX.coordenadas.x][pacmanX.coordenadas.y] = ' ';
-                pacmanX.coordenadas.x = lx;
-                pacmanX.coordenadas.y = ly;
+                pacmanX.coordenadas.x = pasillo2.x;
+                pacmanX.coordenadas.y = pasillo2.y;
+            // PASILLO 2    
+            } else if (lx == pasillo2.x && ly == pasillo2.y)  {
+                laberintoAux[pasillo1.x][pasillo1.y] = 'C';
+                laberintoAux[pacmanX.coordenadas.x][pacmanX.coordenadas.y] = ' ';
+                pacmanX.coordenadas.x = pasillo1.x;
+                pacmanX.coordenadas.y = pasillo1.y;
             // SPAWN DE FANTASMAS (NO DEBE PODER PASAR)
-            } else if (laberintoAux[lx][ly] == 'F') {
-                pacmanX.score += 7;
-                laberintoAux[lx][ly] = 'C';
-                laberintoAux[pacmanX.coordenadas.x][pacmanX.coordenadas.y] = ' ';
-                pacmanX.coordenadas.x = lx;
-                pacmanX.coordenadas.y = ly;
+            } else if (lx == ghostSpawn.x && ly == ghostSpawn.y) {
+                pacmanX.vx = 0;
+                pacmanX.vy = 0;
             // ESPACIO LIBRE
             } else if (laberintoAux[lx][ly] == ' ') {
                 laberintoAux[lx][ly] = 'C';
@@ -362,11 +388,99 @@ int main() {
             /*
                 - Los fantasmas podran bloquearse entre sí, no se podrán atravesar.
                 - Los fantasmas no podrán salir del spawn todos al mismo tiempo, lo que conlleva a realizar un temporizador para cada uno para permitir
-                que estos vayan spawneando por orden.
+                  que estos vayan spawneando por orden.
                 - Si dos fantasmas van a chocar entre si, solo cambiaran de dirección.
                 - Los fantasmas si podrán atravesar los puntos y guindas, de alguna forma....XD
                 - Colision con Pacman
             */
+
+           // Spawn Fantasmas
+
+           if (blinky.tempSpawn == 0) {
+               laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = 'B';
+               blinky.tempSpawn = -1;
+           }
+
+           int gx,gy;
+           int arrayGhostMov[2] = {1,-1};
+
+           gx = blinky.coordenadas.x + blinky.vx;
+           gy = blinky.coordenadas.y + blinky.vy;
+
+           // PARED
+           if (laberintoAux[gx][gy] == '#') {
+               if (blinky.vx != 0) {
+                   blinky.vx = 0;
+                   srand(time(NULL));
+                   int rIndex = rand() % 2;
+                   blinky.vy = arrayGhostMov[rIndex];
+            } else {
+                blinky.vy = 0;
+                srand(time(NULL));
+                int rIndex = rand() % 2;
+                blinky.vx = arrayGhostMov[rIndex];
+            }
+            // PUNTO NORMAL 3
+            } else if (laberintoAux[gx][gy] == '.') {
+                laberintoAux[gx][gy] = 'B';
+                if (blinky.atravesado == ' ') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = ' ';
+                } else if (blinky.atravesado == '.') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = '.';
+                } else if (blinky.atravesado == 'o') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = 'o';
+                }
+                blinky.atravesado = '.';
+                blinky.coordenadas.x = gx;
+                blinky.coordenadas.y = gy;
+            // PUNTO GRANDE 7
+            } else if (laberintoAux[gx][gy] == 'o') {
+                laberintoAux[gx][gy] = 'B';
+                if (blinky.atravesado == ' ') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = ' ';
+                } else if (blinky.atravesado == '.') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = '.';
+                } else if (blinky.atravesado == 'o') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = 'o';
+                }
+                blinky.atravesado = 'o';
+                blinky.coordenadas.x = gx;
+                blinky.coordenadas.y = gy;
+            // PASILLO 1
+            } else if (gx == pasillo1.x && gy == pasillo1.y)  {
+                laberintoAux[pasillo2.x][pasillo2.y] = 'B';
+                laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = ' ';
+                blinky.coordenadas.x = pasillo2.x;
+                blinky.coordenadas.y = pasillo2.y;
+            // PASILLO 2    
+            } else if (gx == pasillo2.x && gy == pasillo2.y)  {
+                laberintoAux[pasillo1.x][pasillo1.y] = 'B';
+                laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = ' ';
+                blinky.coordenadas.x = pasillo1.x;
+                blinky.coordenadas.y = pasillo1.y;
+            // SPAWN DE FANTASMAS (NO DEBE PODER PASAR)
+            } else if (gx == ghostSpawn.x && gy == ghostSpawn.y) {
+                blinky.vx = 0;
+                blinky.vy = -1;
+            // ESPACIO LIBRE
+            } else if (laberintoAux[gx][gy] == ' ') {
+                laberintoAux[gx][gy] = 'B';
+                //laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = ' ';
+                blinky.coordenadas.x = gx;
+                blinky.coordenadas.y = gy;
+                if (blinky.atravesado == ' ') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = ' ';
+                    blinky.atravesado = ' '; 
+                } else if (blinky.atravesado == '.') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = '.';
+                    blinky.atravesado = ' '; 
+                } else if (blinky.atravesado == 'o') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = 'o';
+                    blinky.atravesado = ' '; 
+                }
+                
+            }
+
 
            // SPAWN DE GUINDAS
 
