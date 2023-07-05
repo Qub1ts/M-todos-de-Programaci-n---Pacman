@@ -2,26 +2,30 @@
 #include <windows.h>
 
 // Definición de colores
-#define BLACK 0
-#define RED 12
+#define BLUE 1
+#define RED 4
 #define GREEN 10
-#define YELLOW 14
-#define BLUE 9
-#define MAGENTA 13
-#define CYAN 11
+#define YELLOW 6
+#define PURPLE 13
 #define WHITE 15
+
 
 int main() {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole,BLUE);
+    printf("HOLA XD\n");
+    SetConsoleTextAttribute(hConsole,RED);
+    printf("HOLA XD\n");
+    SetConsoleTextAttribute(hConsole,GREEN);
+    printf("HOLA XD\n");
+    SetConsoleTextAttribute(hConsole,YELLOW);
+    printf("HOLA XD\n");
+    SetConsoleTextAttribute(hConsole,PURPLE);
+    printf("HOLA XD\n");
+    SetConsoleTextAttribute(hConsole,WHITE);
+    printf("HOLA XD\n");
 
-    // Establecer el color de fondo y el color del texto
-    SetConsoleTextAttribute(hConsole, BACKGROUND_BLUE | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-
-    printf("Texto en color");
-    printf("\n");
-
-    // Restablecer el color a los valores predeterminados
-    SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+    
 
     return 0;
 }
