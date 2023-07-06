@@ -55,8 +55,8 @@ typedef struct datosDePartida{
     int scoreFinal;
     int fantasmasComidos;
     int muertes;
-    int puntosPequeños;
-    int puntosGrandes;
+    int smallDots;
+    int bigDots;
 }matchData;
 
 // ----------------------------------------------------Funciones-------------------------------------------------------- //
@@ -290,13 +290,18 @@ int main() {
         clyde.tempSpawn = 19;
         clyde.spawned = 0;
 
+        //-------------------------------------------INICIALIZANDO VARIABLES DE JUEGO-----------------------------------------------------//
+        //--------------------------------------------------------------------------------------------------------------------------------//
+
         int finDelJuego = 0;
         int muertePacman = 0;
         int conteoPuntitosAux = conteoPuntitosEnMapa;
         int guindasPorAparecer = guindas;
+        int tiempoParaComer = 8;
+        int guindaComida = 0;
         double tiempoDeJuego;
-        time_t start_time = time(NULL);
-        time_t current_time;
+        time_t startGameTime = time(NULL);
+        time_t currentGameTime;
 
         // Limpia la consola de comandos
         system("cls");
@@ -349,8 +354,12 @@ int main() {
                 clyde.spawned = 0;
             
                 conteoPuntitosAux = conteoPuntitosEnMapa; // Reinicio de la cuenta de puntitos comidos.
-                muertePacman = 0;
+
                 // Reinicio de temporizador de guindas
+                int tiempoParaComer = 8;
+                int guindaComida = 0;
+                
+                muertePacman = 0;
 
                 // PARPADEO DE TABLERO
                 if (pacmanX.vidas != 0) {
@@ -367,7 +376,7 @@ int main() {
                 }
 
                 // Reinicio de temporizador de juego
-                start_time = time(NULL);
+                startGameTime = time(NULL);
                 tiempoDeJuego = 0;
             }
 
@@ -489,6 +498,16 @@ int main() {
                     clyde.spawned = 1;
                 }
             }
+
+            //----SPAWN DE GUINDAS----//
+            // Con un temporizador, ir spawneando las guindas.
+            currentGameTime = time(NULL);
+            tiempoDeJuego = difftime(currentGameTime,startGameTime);
+            if (tiempoDeJuego >= 180) {
+                muertePacman = 1;
+            }
+
+
             
             //---------------------------------------------------MOVIMIENTO FANTASMAS---------------------------------------------------------//
             //--------------------------------------------------------------------------------------------------------------------------------//ss
@@ -919,14 +938,13 @@ int main() {
                 }
             }
 
-            //----SPAWN DE GUINDAS----//
-            // Con un temporizador, ir spawneando las guindas.
+            
             
 
             //----TEMPORIZADOR----//
             // Si el temporizador llega a cero, Pacman pierde una vida, y el flag "muertePacman" cambiará a 1, es decir, True.
-            current_time = time(NULL);
-            tiempoDeJuego = difftime(current_time,start_time);
+            currentGameTime = time(NULL);
+            tiempoDeJuego = difftime(currentGameTime,startGameTime);
             if (tiempoDeJuego >= 180) {
                 muertePacman = 1;
             }
