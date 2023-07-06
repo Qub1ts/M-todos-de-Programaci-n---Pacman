@@ -24,6 +24,7 @@ int main() {
     printf("HOLA XD\n");
     SetConsoleTextAttribute(hConsole,WHITE);
     printf("HOLA XD\n");
+    Beep(300,900);
 
     
 

@@ -55,6 +55,8 @@ typedef struct datosDePartida{
     int scoreFinal;
     int fantasmasComidos;
     int muertes;
+    int puntosPequeños;
+    int puntosGrandes;
 }matchData;
 
 // ----------------------------------------------------Funciones-------------------------------------------------------- //
@@ -292,6 +294,9 @@ int main() {
         int muertePacman = 0;
         int conteoPuntitosAux = conteoPuntitosEnMapa;
         int guindasPorAparecer = guindas;
+        double tiempoDeJuego;
+        time_t start_time = time(NULL);
+        time_t current_time;
 
         // Limpia la consola de comandos
         system("cls");
@@ -345,6 +350,7 @@ int main() {
             
                 conteoPuntitosAux = conteoPuntitosEnMapa; // Reinicio de la cuenta de puntitos comidos.
                 muertePacman = 0;
+                // Reinicio de temporizador de guindas
 
                 // PARPADEO DE TABLERO
                 if (pacmanX.vidas != 0) {
@@ -359,9 +365,10 @@ int main() {
                     imprimirLaberinto(filas+2,columnas+2,laberintoAux);
                     Sleep(300);system("cls");Sleep(300);
                 }
-                
+
                 // Reinicio de temporizador de juego
-                // Reinicio de temporizador de guindas
+                start_time = time(NULL);
+                tiempoDeJuego = 0;
             }
 
             //--------------------------------------------------------USER INPUT--------------------------------------------------------------//
@@ -495,27 +502,6 @@ int main() {
             int gx,gy;
             int arrayGhostMov[2] = {1,-1};
 
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
-            // AÑADIR MAS MOVIMIENTOS RANDOM
             // AÑADIR MAS MOVIMIENTOS RANDOM
             // AÑADIR MAS MOVIMIENTOS RANDOM
             // AÑADIR MAS MOVIMIENTOS RANDOM
@@ -933,21 +919,28 @@ int main() {
                 }
             }
 
-            // SPAWN DE GUINDAS
-                // Con un temporizador, ir spawneando las guindas.
+            //----SPAWN DE GUINDAS----//
+            // Con un temporizador, ir spawneando las guindas.
             
 
-            // TEMPORIZADOR
-                // Si el temporizador llega a cero, Pacman pierde una vida, y el flag "muertePacman" cambiará a 1, es decir, True.
+            //----TEMPORIZADOR----//
+            // Si el temporizador llega a cero, Pacman pierde una vida, y el flag "muertePacman" cambiará a 1, es decir, True.
+            current_time = time(NULL);
+            tiempoDeJuego = difftime(current_time,start_time);
+            if (tiempoDeJuego >= 180) {
+                muertePacman = 1;
+            }
             
-
             // IMPRIMIR LABERINTO
             HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
             SetConsoleTextAttribute(hConsole,GREEN);
             printf("Score: %d   Vidas: %d\n",pacmanX.score,pacmanX.vidas);
             SetConsoleTextAttribute(hConsole,WHITE);
             imprimirLaberinto(filas+2,columnas+2,laberintoAux);
-        
+            SetConsoleTextAttribute(hConsole,GREEN);
+            printf("Tiempo de Juego: %.0lf",tiempoDeJuego);
+            SetConsoleTextAttribute(hConsole,WHITE);
+
             Sleep(100);
             setCursorPosition(0,0);
 
@@ -960,19 +953,13 @@ int main() {
         if (pacmanX.vidas == 0) {
             printGameOver();
             Sleep(2000);
-            system("cls");
         } else {
             printf("GANASTE!");
             Sleep(2000);
-            system("cls");
         }
-        printf("0. Jugar otra vez\n1. Salir del Juego\nEscoja una opcion: ");
-        scanf("%d",&salirDelJuego);
         /*
-            - Mostrar resultado final del juego (Gano o perdió).
-                - Si conteoPuntitosAux == 0, ganó, si no perdió.
             - Guardar Score en un Array (3 maximos Scores).
-            - Generar un archivo "resultados_XX.out" (XX representa el dia de la partida) con las sgtes estadisticas:
+            - Generar un archivo "resultados_XX.out" (XX representa el dia de la partida) con las siguientes estadisticas:
                 ● La cantidad de puntos pequeños que se comieron.
                 ● La cantidad de puntos grandes que se comieron.
                 ● La cantidad de veces que PacMan atacó a algún fantasma
@@ -980,11 +967,12 @@ int main() {
                 ● Puntaje obtenido
                 ● Tiempo Total de juego
             - Las estadisticas anteriores tambien se deben mostrar al final del juego.
-            - Preguntar al usuario si quiere seguir jugando.
         */
+        printf("\n\n0. Jugar otra vez\n1. Salir del Juego\nEscoja una opcion: ");
+        scanf("%d",&salirDelJuego); 
     }
 
     system("cls");
-    printf("\n\nCHAO XD");
+    printf("\n\nADIOS,TEN UN BUEN DIA!");
     return 0;
 }
