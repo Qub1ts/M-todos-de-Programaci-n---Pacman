@@ -3,6 +3,7 @@
 #include <time.h>
 #include <conio.h>
 #include <windows.h>
+#include "pacmanFunciones.h"
 
 // Definición de colores
 #define BLUE 1
@@ -26,38 +27,6 @@ char gameOver[8][90] = {"  /$$$$$$   /$$$$$$  /$$      /$$ /$$$$$$$$        /$$$
 // ---------------------------------------------------Estructuras------------------------------------------------------- //
 // --------------------------------------------------------------------------------------------------------------------- //
 
-typedef struct coord{
-    int x;
-    int y;
-}cord;
-
-typedef struct pacman{
-    cord coordenadas;
-    int vidas;
-    int score;
-    int vx;
-    int vy;
-}pacman;
-
-typedef struct fantasma{
-    cord coordenadas;
-    int vx;
-    int vy;
-    int spawned;
-    char comido;
-    int spawnSpaces; // Iteraciones para spawnear
-    time_t spawnTimer; // Temporizador de spawneo
-}ghost;
-
-typedef struct datosDePartida{
-    int id;
-    int scoreFinal;
-    int fantasmasComidos;
-    int muertes;
-    int smallDots;
-    int bigDots;
-}matchData;
-
 // ----------------------------------------------------Funciones-------------------------------------------------------- //
 // --------------------------------------------------------------------------------------------------------------------- //
 
@@ -73,132 +42,6 @@ FILE* abrirArchivo(char *nombreFile) {
     return archivo;
 }
 
-// IMPRIMIR LABERINTO
-void imprimirLaberinto(int filas, int columnas,char laberint[filas][columnas],int namnam) {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    for (int i=0;i<filas;i++){
-        for (int j=0;j<columnas;j++){
-            if (laberint[i][j] == 'C' || laberint[i][j] == '.' || laberint[i][j] == 'o') {
-                SetConsoleTextAttribute(hConsole,YELLOW);
-                printf("%c",laberint[i][j]);
-                SetConsoleTextAttribute(hConsole,WHITE);
-            } else if (laberint[i][j] == '#') {
-                SetConsoleTextAttribute(hConsole,BLUE);
-                printf("%c",laberint[i][j]);
-                SetConsoleTextAttribute(hConsole,WHITE);
-            } else if (laberint[i][j] == 'B' || laberint[i][j] == 'M' || laberint[i][j] == 'K' || laberint[i][j] == 'E') {
-                if (namnam == 0) {
-                    SetConsoleTextAttribute(hConsole,PURPLE);
-                    printf("%c",laberint[i][j]);
-                    SetConsoleTextAttribute(hConsole,WHITE);
-                } else {
-                    SetConsoleTextAttribute(hConsole,WHITE);
-                    printf("%c",laberint[i][j]);
-                }
-            } else if (laberint[i][j] == '6') {
-                SetConsoleTextAttribute(hConsole,RED);
-                printf("%c",laberint[i][j]);
-                SetConsoleTextAttribute(hConsole,WHITE);
-            } else {
-                printf("%c",laberint[i][j]);
-            }
-        }
-        printf("\n");
-    }
-}
-
-// DELIMITAR LABERINTO
-void delimitarLaberinto(int filas,int columnas,char laberint[filas][columnas]) {
-    // Delimitar filas
-    for (int j = 0; j < columnas;j++){
-        laberint[0][j] = '#';
-    }
-    for (int j = 0; j < columnas;j++){
-        laberint[filas-1][j] = '#';
-    }
-
-    // Delimitar columnas
-    for (int i = 0; i < filas;i++){
-        laberint[i][0] = '#';
-    }
-    for (int i = 0; i < filas;i++){
-        laberint[i][columnas-1] = '#';
-    }
-}
-
-// OBTIENE LOS CARACTERES DEL LABERINTO Y LO ADAPTA. GUARDA COORDENADAS RELEVANTES
-void obtenerLaberinto(FILE* fp,int filas,int columnas,char laberint[filas][columnas],cord* pacmanSpawn,cord* ghostSpawn,cord* pasillo1,cord* pasillo2,int* conteoPuntitosEnMapa) {
-    char caracter;
-    for (int i=1;i<filas-1;i++){
-        for (int j=1;j<columnas-1;j++){
-            caracter = fgetc(fp); //file get caracter
-            if (caracter == 'x') {
-                laberint[i][j] = '.';
-                (*conteoPuntitosEnMapa)++;
-            } else if (caracter == 'X') {
-                laberint[i][j] = 'o';
-                (*conteoPuntitosEnMapa)++;
-            } else if (caracter == 'w') {
-                laberint[i][j] = '#';
-            // Pasillo    
-            } else if (caracter == 'P') {
-                laberint[i][j] = ' ';
-                if (j == 17) {
-                    laberint[i][18] = ' ';
-                    pasillo2->x = i;
-                    pasillo2->y = 18;
-                } 
-                if (j == 1) {
-                    laberint[i][0] = ' ';
-                    pasillo1->x = i;
-                    pasillo1->y = 0;
-                }
-            } else if (caracter == 'p') {
-                laberint[i][j] = 'C';
-                pacmanSpawn->x = i; // Se guardan las coordenadas del punto de aparición de Pacman
-                pacmanSpawn->y = j;
-            } else if (caracter == 'S') {
-                laberint[i][j] = ' ';
-                ghostSpawn->x = i; // Se guardan las coordenadas del punto de aparición de los fantasmas
-                ghostSpawn->y = j;
-            } else if (caracter == ' ') {
-                laberint[i][j] = ' ';
-            }
-        }
-        caracter = fgetc(fp); // OBTIENE SALTO DE LINEA
-    }
-    // Cerrar el archivo fuente
-    fclose(fp);
-}
-
-// POSICIONA LO QUE SE IMPRIME EN CONSOLA
-void setCursorPosition(int x, int y) {
-    COORD coordinates = {x,y};
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coordinates);
-}
-
-// COPIAR MATRIZ
-void copiarMatriz(int filas,int columnas,char matrizOg[filas][columnas],char matrizResultante[filas][columnas]) {
-    for (int i = 0;i < filas;i++) {
-        for (int j = 0;j < columnas;j++) {
-            matrizResultante[i][j] = matrizOg[i][j];
-        }
-    }
-}
-
-void parpadeoTablero(int filas,int columnas,char laberint[filas][columnas],int param,pacman* pacman) {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
-    imprimirLaberinto(filas,columnas,laberint,param);
-    Sleep(300);system("cls");Sleep(300);
-    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
-    imprimirLaberinto(filas,columnas,laberint,param);
-    Sleep(300);system("cls");Sleep(300);
-    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
-    imprimirLaberinto(filas,columnas,laberint,param);
-    Sleep(300);system("cls");Sleep(300);
-}
-
 // IMPRIMIR GAMEOVER
 void printGameOver() {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -212,52 +55,6 @@ void printGameOver() {
     SetConsoleTextAttribute(hConsole,WHITE);
 }
 
-// INICIALIZAR PACMAN
-void initializePacman(pacman* pacman,cord* pacmanSpawn,int vidas) {
-    pacman->coordenadas = *pacmanSpawn; // Coordenadas iniciales
-    pacman->score = 0;
-    pacman->vidas = vidas;
-    pacman->vx = 0;
-    pacman->vy = 0;
-}
-
-// INICIALIZAR FANTASMA
-void initializeGhost(ghost* ghost,int spawnSpaces,time_t spawnTimer,cord ghostSpawn) {
-    ghost->spawned = 0;
-    ghost->spawnTimer = spawnTimer;
-    ghost->coordenadas = ghostSpawn;
-    ghost->comido = ' ';
-    ghost->vx = -1;
-    ghost->vy = 0;
-    ghost->spawnSpaces = spawnSpaces;
-}
-
-// OBTIENE EL INPUT DEL USUARIO PARA CONTROLAR A PACMAN
-void userInput(pacman* pacman) {
-    // Recibe las teclas que presiona el usuario para controlar a Pacman
-    if (_kbhit()) {
-        char ch = _getch();
-        pacman->vx = 0; // Se reinicia el movimiento de Pacman
-        pacman->vy = 0; // Se reinicia el movimiento de Pacman
-        // a = 97; d = 100; w = 119; s = 115
-        switch(ch) {
-            case 97: // A
-                pacman->vy = -1;
-                break;
-            case 100: // D
-                pacman->vy = 1;
-                break;
-            case 119: // W
-                pacman->vx = -1;
-                Sleep(50);
-                break;
-            case 115: // S
-                pacman->vx = 1;
-                Sleep(50);
-                break;
-        }
-    }
-}
 
 // ------------------------------------------------------Main----------------------------------------------------------- //
 // --------------------------------------------------------------------------------------------------------------------- //
@@ -277,7 +74,9 @@ int main(int argc, char* argv[]) {
     fscanf(fp,"%d %d %d",&filas,&columnas,&guindas);
 
     // Crea laberinto a partir de las filas y columnas obtenidas del archivo
-    char laberinto[filas+2][columnas+2];
+    //char laberinto[filas+2][columnas+2];
+
+    char** laberinto = crearMatriz(filas+2,columnas+2);
 
     caracter = fgetc(fp); // OBTIENE SALTO DE LINEA 
 
@@ -301,8 +100,7 @@ int main(int argc, char* argv[]) {
     obtenerLaberinto(fp,filas+2,columnas+2,laberinto,&pacmanSpawn,&ghostSpawn,&pasillo1,&pasillo2,&conteoPuntitosEnMapa);
 
     // Creacion de laberinto auxiliar el cual sufrirá los cambios durante el juego, para preservar asi el original intacto
-    char laberintoAux[filas+2][columnas+2];
-
+    char** laberintoAux;
     // Creacion de entidades del juego
     pacman pacmanX;
     ghost blinky;
@@ -312,14 +110,15 @@ int main(int argc, char* argv[]) {
 
     int salirDelJuego = 0;
 
+
     //-------------------------------------------------SALIR DEL JUEGO----------------------------------------------------------------//
     //--------------------------------------------------------------------------------------------------------------------------------//
         
     // La opción de salir del juego estará disponible cada vez que Pacman gane o pierda sus 3 vidas.
     // Se le preguntará al usuario si desea volver a jugar.
     while (salirDelJuego != 1) {
-
-        copiarMatriz(filas+2,columnas+2,laberinto,laberintoAux);
+        
+        laberintoAux = copiarMatriz(filas+2,columnas+2,laberinto);
 
         //--------------------------------------------INICIALIZANDO PACMAN----------------------------------------------------------------//
         //--------------------------------------------------------------------------------------------------------------------------------//
@@ -343,8 +142,12 @@ int main(int argc, char* argv[]) {
         double tiempoDeJuego;
         double tiempoDeComida;
         double tiempoDeGuinda;
+        double tiempoDePlatano;
         // Es la frecuencia de tiempo en la cual spawnearan guindas
         int guindasTimeSpawn = (180/guindas) - 15;
+        // Es la frecuencia de tiempo en la cual spawnearan platanos
+        int platanoTimeSpawn = (180/2) - 15;
+
         // Flag que indica si Pacman puede comerse a los fantasmas
         int namnam = 0;
         int segundosParaComer = 8;
@@ -353,6 +156,12 @@ int main(int argc, char* argv[]) {
 
         time_t startGameTime = time(NULL);
         time_t startGuindasTime = time(NULL);
+        time_t startPlatanoTime = time(NULL);
+
+
+        system("cls");
+        printf("Para moverte con el Pacman, utiliza las teclas W A S D\n");
+        Sleep(5000);
 
         // Limpia la consola de comandos
         system("cls");
@@ -366,7 +175,7 @@ int main(int argc, char* argv[]) {
             // Verifica si Pacman ha muerto para ver si se reinicia el tablero
             if (muertePacman == 1) {
                 // Se reinicia el tablero
-                copiarMatriz(filas+2,columnas+2,laberinto,laberintoAux); 
+                laberintoAux = copiarMatriz(filas+2,columnas+2,laberinto); 
                 // Se reinicia Pacman
                 initializePacman(&pacmanX,&pacmanSpawn,pacmanX.vidas-1); 
                 // Se reinician los Fantasmas
@@ -389,6 +198,7 @@ int main(int argc, char* argv[]) {
                 // Reinicio de temporizador de juego
                 startGameTime = time(NULL);
                 startGuindasTime = time(NULL);
+                startPlatanoTime = time(NULL);
 
                 muertePacman = 0;
             }
@@ -435,6 +245,20 @@ int main(int argc, char* argv[]) {
                 pacmanX.coordenadas.x = lx;
                 pacmanX.coordenadas.y = ly;
                 segundosParaComer += 2;
+            // PLATANO
+            } else if (laberintoAux[lx][ly] == 'J') {
+                laberintoAux[lx][ly] = 'C';
+                laberintoAux[pacmanX.coordenadas.x][pacmanX.coordenadas.y] = ' ';
+                pacmanX.coordenadas.x = lx;
+                pacmanX.coordenadas.y = ly;
+                laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = blinky.comido;
+                laberintoAux[pinky.coordenadas.x][pinky.coordenadas.y] = pinky.comido;
+                laberintoAux[inky.coordenadas.x][inky.coordenadas.y] = inky.comido;
+                laberintoAux[clyde.coordenadas.x][clyde.coordenadas.y] = clyde.comido;
+                initializeGhost(&blinky,1,time(NULL),ghostSpawn);
+                initializeGhost(&pinky,7,time(NULL),ghostSpawn);
+                initializeGhost(&inky,13,time(NULL),ghostSpawn);
+                initializeGhost(&clyde,19,time(NULL),ghostSpawn);
             // PASILLO 1
             } else if (lx == pasillo1.x && ly == pasillo1.y)  {
                 laberintoAux[pasillo2.x][pasillo2.y] = 'C';
@@ -658,6 +482,13 @@ int main(int argc, char* argv[]) {
                     blinky.comido = '6';
                     blinky.coordenadas.x = gx;
                     blinky.coordenadas.y = gy;
+                // PLATANO
+                } else if (laberintoAux[gx][gy] == 'J') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = blinky.comido;
+                    laberintoAux[gx][gy] = 'B';
+                    blinky.comido = 'J';
+                    blinky.coordenadas.x = gx;
+                    blinky.coordenadas.y = gy;
                 // PASILLO 1
                 } else if (gx == pasillo1.x && gy == pasillo1.y)  {
                     laberintoAux[pasillo2.x][pasillo2.y] = 'B';
@@ -738,6 +569,13 @@ int main(int argc, char* argv[]) {
                     pinky.comido = '6';
                     pinky.coordenadas.x = gx;
                     pinky.coordenadas.y = gy;
+                // PLATANO
+                } else if (laberintoAux[gx][gy] == 'J') {
+                    laberintoAux[pinky.coordenadas.x][pinky.coordenadas.y] = pinky.comido;
+                    laberintoAux[gx][gy] = 'M';
+                    pinky.comido = 'J';
+                    pinky.coordenadas.x = gx;
+                    pinky.coordenadas.y = gy;
                 // PASILLO 1
                 } else if (gx == pasillo1.x && gy == pasillo1.y) {
                     laberintoAux[pasillo2.x][pasillo2.y] = 'M';
@@ -816,6 +654,13 @@ int main(int argc, char* argv[]) {
                     laberintoAux[inky.coordenadas.x][inky.coordenadas.y] = inky.comido;
                     laberintoAux[gx][gy] = 'K';
                     inky.comido = '6';
+                    inky.coordenadas.x = gx;
+                    inky.coordenadas.y = gy;
+                // PLATANO
+                } else if (laberintoAux[gx][gy] == 'J') {
+                    laberintoAux[inky.coordenadas.x][inky.coordenadas.y] = inky.comido;
+                    laberintoAux[gx][gy] = 'K';
+                    inky.comido = 'J';
                     inky.coordenadas.x = gx;
                     inky.coordenadas.y = gy;
                 // PASILLO 1
@@ -899,6 +744,13 @@ int main(int argc, char* argv[]) {
                     clyde.comido = '6';
                     clyde.coordenadas.x = gx;
                     clyde.coordenadas.y = gy;
+                // PLATANO
+                } else if (laberintoAux[gx][gy] == 'J') {
+                    laberintoAux[clyde.coordenadas.x][clyde.coordenadas.y] = clyde.comido;
+                    laberintoAux[gx][gy] = 'E';
+                    clyde.comido = 'J';
+                    clyde.coordenadas.x = gx;
+                    clyde.coordenadas.y = gy;
                 // PASILLO 1
                 } else if (gx == pasillo1.x && gy == pasillo1.y)  {
                     laberintoAux[pasillo2.x][pasillo2.y] = 'E';
@@ -961,6 +813,34 @@ int main(int argc, char* argv[]) {
                 startGuindasTime = time(NULL);
             }
 
+            //----SPAWN DE PLATANOS----//
+            // Con un temporizador, ir spawneando los platanos.
+            currentGameTime = time(NULL);
+            tiempoDePlatano = difftime(currentGameTime,startPlatanoTime);
+            if (tiempoDePlatano == platanoTimeSpawn) {
+                if (laberintoAux[pacmanSpawn.x][pacmanSpawn.y] == 'C') {
+                    laberintoAux[blinky.coordenadas.x][blinky.coordenadas.y] = blinky.comido;
+                    laberintoAux[pinky.coordenadas.x][pinky.coordenadas.y] = pinky.comido;
+                    laberintoAux[inky.coordenadas.x][inky.coordenadas.y] = inky.comido;
+                    laberintoAux[clyde.coordenadas.x][clyde.coordenadas.y] = clyde.comido;  
+                    initializeGhost(&blinky,1,time(NULL),ghostSpawn);
+                    initializeGhost(&pinky,7,time(NULL),ghostSpawn);
+                    initializeGhost(&inky,13,time(NULL),ghostSpawn);
+                    initializeGhost(&clyde,19,time(NULL),ghostSpawn);
+                } else if (laberintoAux[pacmanSpawn.x][pacmanSpawn.y] == 'B') {
+                    blinky.comido = 'J';
+                } else if (laberintoAux[pacmanSpawn.x][pacmanSpawn.y] == 'M') {
+                    pinky.comido = 'J';
+                } else if (laberintoAux[pacmanSpawn.x][pacmanSpawn.y] == 'K') {
+                    inky.comido = 'J';
+                } else if (laberintoAux[pacmanSpawn.x][pacmanSpawn.y] == 'E') {
+                    clyde.comido = 'J';
+                } else {
+                    laberintoAux[pacmanSpawn.x][pacmanSpawn.y] = 'J';
+                }
+                startPlatanoTime = time(NULL);
+            }
+
             //----TIEMPO PARA COMER FANTASMAS----//
             if (namnam == 1) {
                 currentGameTime = time(NULL);
@@ -1014,12 +894,14 @@ int main(int argc, char* argv[]) {
                 ● Puntaje obtenido
                 ● Tiempo Total de juego
             - Las estadisticas anteriores tambien se deben mostrar al final del juego.
-        */
+            */
+        
         printf("\n\n0. Jugar otra vez\n1. Salir del Juego\nEscoja una opcion: ");
         scanf("%d",&salirDelJuego); 
     }
 
     system("cls");
     printf("\n\nADIOS,TEN UN BUEN DIA!");
+            
     return 0;
 }
