@@ -126,6 +126,51 @@ void delimitarLaberinto(int filas,int columnas,char laberint[filas][columnas]) {
     }
 }
 
+// OBTIENE LOS CARACTERES DEL LABERINTO Y LO ADAPTA. GUARDA COORDENADAS RELEVANTES
+void obtenerLaberinto(FILE* fp,int filas,int columnas,char laberint[filas][columnas],cord* pacmanSpawn,cord* ghostSpawn,cord* pasillo1,cord* pasillo2,int* conteoPuntitosEnMapa) {
+    char caracter;
+    for (int i=1;i<filas-1;i++){
+        for (int j=1;j<columnas-1;j++){
+            caracter = fgetc(fp); //file get caracter
+            if (caracter == 'x') {
+                laberint[i][j] = '.';
+                (*conteoPuntitosEnMapa)++;
+            } else if (caracter == 'X') {
+                laberint[i][j] = 'o';
+                (*conteoPuntitosEnMapa)++;
+            } else if (caracter == 'w') {
+                laberint[i][j] = '#';
+            // Pasillo    
+            } else if (caracter == 'P') {
+                laberint[i][j] = ' ';
+                if (j == 17) {
+                    laberint[i][18] = ' ';
+                    pasillo2->x = i;
+                    pasillo2->y = 18;
+                } 
+                if (j == 1) {
+                    laberint[i][0] = ' ';
+                    pasillo1->x = i;
+                    pasillo1->y = 0;
+                }
+            } else if (caracter == 'p') {
+                laberint[i][j] = 'C';
+                pacmanSpawn->x = i; // Se guardan las coordenadas del punto de aparición de Pacman
+                pacmanSpawn->y = j;
+            } else if (caracter == 'S') {
+                laberint[i][j] = ' ';
+                ghostSpawn->x = i; // Se guardan las coordenadas del punto de aparición de los fantasmas
+                ghostSpawn->y = j;
+            } else if (caracter == ' ') {
+                laberint[i][j] = ' ';
+            }
+        }
+        caracter = fgetc(fp); // OBTIENE SALTO DE LINEA
+    }
+    // Cerrar el archivo fuente
+    fclose(fp);
+}
+
 // POSICIONA LO QUE SE IMPRIME EN CONSOLA
 void setCursorPosition(int x, int y) {
     COORD coordinates = {x,y};
@@ -141,7 +186,20 @@ void copiarMatriz(int filas,int columnas,char matrizOg[filas][columnas],char mat
     }
 }
 
-// IMRPIMIR GAMEOVER
+void parpadeoTablero(int filas,int columnas,char laberint[filas][columnas],int param,pacman* pacman) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
+    imprimirLaberinto(filas,columnas,laberint,param);
+    Sleep(300);system("cls");Sleep(300);
+    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
+    imprimirLaberinto(filas,columnas,laberint,param);
+    Sleep(300);system("cls");Sleep(300);
+    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
+    imprimirLaberinto(filas,columnas,laberint,param);
+    Sleep(300);system("cls");Sleep(300);
+}
+
+// IMPRIMIR GAMEOVER
 void printGameOver() {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole,RED);
@@ -152,6 +210,15 @@ void printGameOver() {
         printf("\n"); 
     }
     SetConsoleTextAttribute(hConsole,WHITE);
+}
+
+// INICIALIZAR PACMAN
+void initializePacman(pacman* pacman,cord* pacmanSpawn,int vidas) {
+    pacman->coordenadas = *pacmanSpawn; // Coordenadas iniciales
+    pacman->score = 0;
+    pacman->vidas = vidas;
+    pacman->vx = 0;
+    pacman->vy = 0;
 }
 
 // INICIALIZAR FANTASMA
@@ -165,13 +232,43 @@ void initializeGhost(ghost* ghost,int spawnSpaces,time_t spawnTimer,cord ghostSp
     ghost->spawnSpaces = spawnSpaces;
 }
 
+// OBTIENE EL INPUT DEL USUARIO PARA CONTROLAR A PACMAN
+void userInput(pacman* pacman) {
+    // Recibe las teclas que presiona el usuario para controlar a Pacman
+    if (_kbhit()) {
+        char ch = _getch();
+        pacman->vx = 0; // Se reinicia el movimiento de Pacman
+        pacman->vy = 0; // Se reinicia el movimiento de Pacman
+        // a = 97; d = 100; w = 119; s = 115
+        switch(ch) {
+            case 97: // A
+                pacman->vy = -1;
+                break;
+            case 100: // D
+                pacman->vy = 1;
+                break;
+            case 119: // W
+                pacman->vx = -1;
+                Sleep(50);
+                break;
+            case 115: // S
+                pacman->vx = 1;
+                Sleep(50);
+                break;
+        }
+    }
+}
+
 // ------------------------------------------------------Main----------------------------------------------------------- //
 // --------------------------------------------------------------------------------------------------------------------- //
 
-int main() {
+// - gcc main.c header.c
+// - a.exe laberinto.txt
+
+int main(int argc, char* argv[]) {
 
     // ABRIR EL ARCHIVO
-    FILE* fp = abrirArchivo("laberinto.txt");
+    FILE* fp = abrirArchivo(argv[1]);
 
     int filas,columnas,guindas;
     char caracter;
@@ -201,46 +298,7 @@ int main() {
 
     // Inicializar laberinto
     // Obtiene los carácters del archivo
-    for (int i=1;i<filas+1;i++){
-        for (int j=1;j<columnas+1;j++){
-            caracter = fgetc(fp); //file get caracter
-            if (caracter == 'x') {
-                laberinto[i][j] = '.';
-                conteoPuntitosEnMapa += 1;
-            } else if (caracter == 'X') {
-                laberinto[i][j] = 'o';
-                conteoPuntitosEnMapa += 1;
-            } else if (caracter == 'w') {
-                laberinto[i][j] = '#';
-            // Pasillo    
-            } else if (caracter == 'P') {
-                laberinto[i][j] = ' ';
-                if (j == 17) {
-                    laberinto[i][18] = ' ';
-                    pasillo2.x = i;
-                    pasillo2.y = 18;
-                } 
-                if (j == 1) {
-                    laberinto[i][0] = ' ';
-                    pasillo1.x = i;
-                    pasillo1.y = 0;
-                }
-            } else if (caracter == 'p') {
-                laberinto[i][j] = 'C';
-                pacmanSpawn.x = i; // Se guardan las coordenadas del punto de aparición de Pacman
-                pacmanSpawn.y = j;
-            } else if (caracter == 'S') {
-                laberinto[i][j] = ' ';
-                ghostSpawn.x = i; // Se guardan las coordenadas del punto de aparición de los fantasmas
-                ghostSpawn.y = j;
-            } else if (caracter == ' ') {
-                laberinto[i][j] = ' ';
-            }
-        }
-        caracter = fgetc(fp); // OBTIENE SALTO DE LINEA
-    }
-    // Cerrar el archivo fuente
-    fclose(fp);
+    obtenerLaberinto(fp,filas+2,columnas+2,laberinto,&pacmanSpawn,&ghostSpawn,&pasillo1,&pasillo2,&conteoPuntitosEnMapa);
 
     // Creacion de laberinto auxiliar el cual sufrirá los cambios durante el juego, para preservar asi el original intacto
     char laberintoAux[filas+2][columnas+2];
@@ -257,7 +315,6 @@ int main() {
     //-------------------------------------------------SALIR DEL JUEGO----------------------------------------------------------------//
     //--------------------------------------------------------------------------------------------------------------------------------//
         
-    // Hacer un "while(salirDelJuego)" desde aqui.
     // La opción de salir del juego estará disponible cada vez que Pacman gane o pierda sus 3 vidas.
     // Se le preguntará al usuario si desea volver a jugar.
     while (salirDelJuego != 1) {
@@ -266,11 +323,7 @@ int main() {
 
         //--------------------------------------------INICIALIZANDO PACMAN----------------------------------------------------------------//
         //--------------------------------------------------------------------------------------------------------------------------------//
-        pacmanX.coordenadas = pacmanSpawn; // Coordenadas iniciales
-        pacmanX.score = 0;
-        pacmanX.vidas = 3;
-        pacmanX.vx = 0;
-        pacmanX.vy = 0;
+        initializePacman(&pacmanX,&pacmanSpawn,3);
 
         //-------------------------------------------INICIALIZANDO FANTASMAS--------------------------------------------------------------//
         //--------------------------------------------------------------------------------------------------------------------------------//
@@ -284,6 +337,7 @@ int main() {
         //--------------------------------------------------------------------------------------------------------------------------------//
 
         int finDelJuego = 0;
+        // Flag que indica si Pacman murio 
         int muertePacman = 0;
         int conteoPuntitosAux = conteoPuntitosEnMapa;
         double tiempoDeJuego;
@@ -311,19 +365,14 @@ int main() {
 
             // Verifica si Pacman ha muerto para ver si se reinicia el tablero
             if (muertePacman == 1) {
-                copiarMatriz(filas+2,columnas+2,laberinto,laberintoAux); // Se reinicia el tablero
-                pacmanX.vidas -= 1; // Se le resta una vida a Pacman ya que murió
-                pacmanX.coordenadas = pacmanSpawn; // Se reinicia la posición de Pacman
-                pacmanX.score = 0; // Se reinicia el Score de Pacman
-                pacmanX.vx = 0; // Se reinicia el movimiento de Pacman
-                pacmanX.vy = 0; // Se reinicia el movimiento de Pacman
-
+                // Se reinicia el tablero
+                copiarMatriz(filas+2,columnas+2,laberinto,laberintoAux); 
+                // Se reinicia Pacman
+                initializePacman(&pacmanX,&pacmanSpawn,pacmanX.vidas-1); 
+                // Se reinician los Fantasmas
                 initializeGhost(&blinky,1,10,ghostSpawn);
-
                 initializeGhost(&pinky,7,10,ghostSpawn);
-
                 initializeGhost(&inky,13,10,ghostSpawn);
-
                 initializeGhost(&clyde,19,10,ghostSpawn);
 
                 time_t timeToEat = 10;
@@ -334,16 +383,7 @@ int main() {
 
                 // PARPADEO DE TABLERO
                 if (pacmanX.vidas != 0) {
-                    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-                    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacmanX.score,pacmanX.vidas);SetConsoleTextAttribute(hConsole,WHITE);
-                    imprimirLaberinto(filas+2,columnas+2,laberintoAux,namnam);
-                    Sleep(300);system("cls");Sleep(300);
-                    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacmanX.score,pacmanX.vidas);SetConsoleTextAttribute(hConsole,WHITE);
-                    imprimirLaberinto(filas+2,columnas+2,laberintoAux,namnam);
-                    Sleep(300);system("cls");Sleep(300);
-                    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacmanX.score,pacmanX.vidas);SetConsoleTextAttribute(hConsole,WHITE);
-                    imprimirLaberinto(filas+2,columnas+2,laberintoAux,namnam);
-                    Sleep(300);system("cls");Sleep(300);
+                    parpadeoTablero(filas+2,columnas+2,laberintoAux,namnam,&pacmanX);
                 }
 
                 // Reinicio de temporizador de juego
@@ -355,30 +395,9 @@ int main() {
 
             //--------------------------------------------------------USER INPUT--------------------------------------------------------------//
             //--------------------------------------------------------------------------------------------------------------------------------//
-        
+            
             // Recibe las teclas que presiona el usuario para controlar a Pacman
-            if (_kbhit()) {
-                char ch = _getch();
-                pacmanX.vx = 0; // Se reinicia el movimiento de Pacman
-                pacmanX.vy = 0; // Se reinicia el movimiento de Pacman
-                // a = 97; d = 100; w = 119; s = 115
-                switch(ch) {
-                    case 97: // A
-                        pacmanX.vy = -1;
-                        break;
-                    case 100: // D
-                        pacmanX.vy = 1;
-                        break;
-                    case 119: // W
-                        pacmanX.vx = -1;
-                        Sleep(50);
-                        break;
-                    case 115: // S
-                        pacmanX.vx = 1;
-                        Sleep(50);
-                        break;
-                    }
-                }
+            userInput(&pacmanX);
                 
             //---------------------------------------------------MOVIMIENTO PACMAN---------------------------------------------------------//
             //-----------------------------------------------------------------------------------------------------------------------------//

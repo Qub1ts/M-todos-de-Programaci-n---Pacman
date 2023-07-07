@@ -23,7 +23,7 @@ void initializeGhost(ghost* ghost,int spawnSpaces,time_t spawnTimer,cord ghostSp
     ghost->spawned = 0;
     ghost->comible = 0;
     ghost->spawnTimer = spawnTimer;
-    ghost->coordenadas = ghostSpawn;
+    ghost->coordenadas = ghostSpawn; 
     ghost->comido = ' ';
     ghost->vx = -1;
     ghost->vy = 0;
