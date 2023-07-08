@@ -3,6 +3,7 @@
 #include <time.h>
 #include <conio.h>
 #include <windows.h>
+#include <string.h>
 #include "pacmanFunciones.h"
 
 // Definición de colores
@@ -31,6 +32,16 @@ char** copiarMatriz(int filas,int columnas,char** matrizOg) {
         }
     }
     return newMatriz;
+}
+
+void initializeMatchStats(matchData* match,int id) {
+    match->id = id;
+    match->muertes = 0;
+    match->scoreFinal = 0;
+    match->fantasmasComidos = 0;
+    match->bigDots = 0;
+    match->smallDots = 0;
+    match->gameTime = 0;
 }
 
 // DELIMITAR LABERINTO
@@ -171,7 +182,7 @@ void letGhostSpawn(ghost* ghost,char** maze) {
 }
 
 // MOVIMIENTO DE PACMAN
-void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namnam,int* segundosParaComer,time_t* timeToEat,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4,int* muertePacman) {
+void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namnam,int* segundosParaComer,time_t* timeToEat,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4,int* muertePacman,matchData* match) {
     int lx,ly;
     lx = pacman->coordenadas.x + pacman->vx;
     ly = pacman->coordenadas.y + pacman->vy;
@@ -188,6 +199,7 @@ void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namna
         maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
         pacman->coordenadas.x = lx;
         pacman->coordenadas.y = ly;
+        match->smallDots += 1;
     // PUNTO GRANDE 7
     } else if (maze[lx][ly] == 'o') {
         pacman->score += 7;
@@ -198,6 +210,7 @@ void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namna
         pacman->coordenadas.y = ly;
         (*namnam) = 1;
         (*timeToEat) = time(NULL);
+        match->bigDots += 1;
     // GUINDA
     } else if (maze[lx][ly] == '6') {
         maze[lx][ly] = 'C';
@@ -265,6 +278,7 @@ void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namna
             pacman->coordenadas.x = lx;
             pacman->coordenadas.y = ly;
             initializeGhost(ghost1,1,time(NULL),*ghostSpawn);
+            match->fantasmasComidos += 1;
         }
     } else if (maze[lx][ly] == ghost2->letra) {
         if ((*namnam) == 0) {
@@ -289,6 +303,7 @@ void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namna
             pacman->coordenadas.x = lx;
             pacman->coordenadas.y = ly;
             initializeGhost(ghost2,7,time(NULL),*ghostSpawn);
+            match->fantasmasComidos += 1;
         }  
     } else if (maze[lx][ly] == ghost3->letra) {
         if ((*namnam) == 0) {
@@ -313,9 +328,10 @@ void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namna
             pacman->coordenadas.x = lx;
             pacman->coordenadas.y = ly;
             initializeGhost(ghost3,13,time(NULL),*ghostSpawn);
+            match->fantasmasComidos += 1;
         } 
     } else if (maze[lx][ly] == ghost4->letra) {
-        if (namnam == 0) {
+        if ((*namnam) == 0) {
             maze[lx][ly] = ghost4->letra;
             maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
             pacman->coordenadas.x = lx;
@@ -337,12 +353,13 @@ void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namna
             pacman->coordenadas.x = lx;
             pacman->coordenadas.y = ly;
             initializeGhost(ghost4,19,time(NULL),*ghostSpawn);
+            match->fantasmasComidos += 1;
         }   
     }
 }
 
 // MOVIMIENTO DE LOS FANTASMAS
-void ghostMovement(ghost* ghost,pacman* pacman,char** maze,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,int* muertePacman,int namnam) {
+void ghostMovement(ghost* ghost,pacman* pacman,char** maze,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,int* muertePacman,int namnam,matchData* match) {
     int arrayGhostMov[2] = {1,-1};
     int gx,gy;
     if (ghost->spawned == 1) {
@@ -425,6 +442,7 @@ void ghostMovement(ghost* ghost,pacman* pacman,char** maze,cord* pasillo1,cord* 
                 maze[ghost->coordenadas.x][ghost->coordenadas.y] = ghost->comido;
                 maze[gx][gy] = 'C';
                 pacman->score += 10;
+                match->fantasmasComidos += 1;
                 if (ghost->letra == 'B') {
                     initializeGhost(ghost,1,time(NULL),*ghostSpawn);
                 } else if (ghost->letra == 'M') {
@@ -529,4 +547,47 @@ void parpadeoTablero(int filas,int columnas,char** laberint,int param,pacman* pa
     SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
     imprimirLaberinto(filas,columnas,laberint,param);
     Sleep(300);system("cls");Sleep(300);
+}
+
+// OBTIENE LA FECHA ACTUAL EN FORMATO DE STRING
+void obtenerFechaActual(char* fecha) {
+    time_t tiempo;
+    struct tm* fechaActual;
+
+    // Obtener el tiempo actual
+    tiempo = time(NULL);
+    fechaActual = localtime(&tiempo);
+
+    // Formatear la fecha en formato "dd/mm/yy"
+    sprintf(fecha, "%02d-%02d-%02d", fechaActual->tm_mday, fechaActual->tm_mon + 1, fechaActual->tm_year % 100);
+}
+
+// IMPRIMIR ESTADISTICAS DE JUEGO
+void printStats(matchData* match,double totalGameTime) {
+    printf("\n\n   Estadisticas de Juego:\n//-----------------------//\n");
+    printf("- Puntos chicos comidos: %d\n",match->smallDots);
+    printf("- Puntos grandes comidos: %d\n",match->bigDots);
+    printf("- Fantasmas comidos: %d\n",match->fantasmasComidos);
+    printf("- Muertes de Pacman: %d\n",match->muertes);
+    printf("- Tiempo Total de Juego: %0.lf segundos\n",totalGameTime);
+    printf("- Puntaje Obtenido: %d\n",match->scoreFinal);
+}
+
+// GENERAR ARCHIVO DE ESTADISTICAS
+void generateStatsFile(matchData* match,double totalGameTime) {
+    char resultados[32] = "resultados";
+    char fecha[9];
+    obtenerFechaActual(fecha);
+    char out[] = ".out";
+    strcat(resultados,fecha);strcat(resultados,out);
+
+    FILE* fOut = fopen(resultados,"a");
+    fprintf(fOut,"   Estadisticas de Juego:\n//-----------------------//\n");
+    fprintf(fOut,"- Puntos chicos comidos: %d\n",match->smallDots);
+    fprintf(fOut,"- Puntos grandes comidos: %d\n",match->bigDots);
+    fprintf(fOut,"- Fantasmas comidos: %d\n",match->fantasmasComidos);
+    fprintf(fOut,"- Muertes de Pacman: %d\n",match->muertes);
+    fprintf(fOut,"- Tiempo Total de Juego: %0.lf segundos\n",totalGameTime);
+    fprintf(fOut,"- Puntaje Obtenido: %d\n",match->scoreFinal);
+    fclose(fOut);
 }

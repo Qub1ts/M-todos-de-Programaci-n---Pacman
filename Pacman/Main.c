@@ -3,6 +3,7 @@
 #include <time.h>
 #include <conio.h>
 #include <windows.h>
+#include <string.h>
 #include "pacmanFunciones.h"
 
 // Para compilar:
@@ -101,8 +102,6 @@ int main(int argc, char* argv[]) {
     fscanf(fp,"%d %d %d",&filas,&columnas,&guindas);
 
     // Crea laberinto a partir de las filas y columnas obtenidas del archivo
-    //char laberinto[filas+2][columnas+2];
-
     char** laberinto = crearMatriz(filas+2,columnas+2);
 
     caracter = fgetc(fp); // OBTIENE SALTO DE LINEA 
@@ -134,6 +133,8 @@ int main(int argc, char* argv[]) {
     ghost pinky;pinky.letra = 'M';
     ghost inky;inky.letra = 'K';
     ghost clyde;clyde.letra = 'E';
+
+    int bestScores[3];bestScores[0] = 0;bestScores[1] = 0;bestScores[2] = 0;
 
     int salirDelJuego = 0;
 
@@ -169,12 +170,16 @@ int main(int argc, char* argv[]) {
         //-------------------------------------------INICIALIZANDO VARIABLES DE JUEGO-----------------------------------------------------//
         //--------------------------------------------------------------------------------------------------------------------------------//
 
+        matchData match;
+        initializeMatchStats(&match,1);
+
         int finDelJuego = 0;
         // Flag que indica si Pacman murio 
         int muertePacman = 0;
         int conteoPuntitosAux = conteoPuntitosEnMapa;
         double tiempoDeJuego;
         double tiempoDeComida;
+        double totalGameTime;
         // Es la frecuencia de tiempo en la cual spawnearan guindas
         int guindasTimeSpawn = (180/guindas) - 15;
         // Es la frecuencia de tiempo en la cual spawnearan platanos
@@ -201,10 +206,19 @@ int main(int argc, char* argv[]) {
 
             // Verifica si Pacman ha muerto para ver si se reinicia el tablero
             if (muertePacman == 1) {
+                match.scoreFinal = pacmanX.score;
                 // Se reinicia el tablero
                 laberintoAux = copiarMatriz(filas+2,columnas+2,laberinto); 
                 // Se reinicia Pacman
                 initializePacman(&pacmanX,&pacmanSpawn,pacmanX.vidas-1); 
+                match.muertes += 1;
+                totalGameTime += match.gameTime;
+                if (pacmanX.vidas != 0) {
+                    match.fantasmasComidos = 0;
+                    match.smallDots = 0;
+                    match.bigDots = 0;
+                    match.gameTime = 0;
+                }
                 // Se reinician los Fantasmas
                 initializeGhost(&blinky,1,10,ghostSpawn);
                 initializeGhost(&pinky,7,10,ghostSpawn);
@@ -239,7 +253,7 @@ int main(int argc, char* argv[]) {
             //---------------------------------------------------MOVIMIENTO PACMAN---------------------------------------------------------//
             //-----------------------------------------------------------------------------------------------------------------------------//
 
-            pacmanMovement(&pacmanX,laberintoAux,&conteoPuntitosAux,&namnam,&segundosParaComer,&timeToEat,&pasillo1,&pasillo2,&ghostSpawn,&blinky,&pinky,&inky,&clyde,&muertePacman);
+            pacmanMovement(&pacmanX,laberintoAux,&conteoPuntitosAux,&namnam,&segundosParaComer,&timeToEat,&pasillo1,&pasillo2,&ghostSpawn,&blinky,&pinky,&inky,&clyde,&muertePacman,&match);
 
             //-----------------------------------------------------SPAWN FANTASMAS------------------------------------------------------------//
             //--------------------------------------------------------------------------------------------------------------------------------//
@@ -258,10 +272,10 @@ int main(int argc, char* argv[]) {
                 // - Los fantasmas si podrán atravesar los puntos y frutas.
                 // - Si un fantasma (no comible) choca con Pacman, Pacman pierde una vida.
 
-            ghostMovement(&blinky,&pacmanX,laberintoAux,&pasillo1,&pasillo2,&ghostSpawn,&muertePacman,namnam);
-            ghostMovement(&pinky,&pacmanX,laberintoAux,&pasillo1,&pasillo2,&ghostSpawn,&muertePacman,namnam);
-            ghostMovement(&inky,&pacmanX,laberintoAux,&pasillo1,&pasillo2,&ghostSpawn,&muertePacman,namnam);
-            ghostMovement(&clyde,&pacmanX,laberintoAux,&pasillo1,&pasillo2,&ghostSpawn,&muertePacman,namnam);
+            ghostMovement(&blinky,&pacmanX,laberintoAux,&pasillo1,&pasillo2,&ghostSpawn,&muertePacman,namnam,&match);
+            ghostMovement(&pinky,&pacmanX,laberintoAux,&pasillo1,&pasillo2,&ghostSpawn,&muertePacman,namnam,&match);
+            ghostMovement(&inky,&pacmanX,laberintoAux,&pasillo1,&pasillo2,&ghostSpawn,&muertePacman,namnam,&match);
+            ghostMovement(&clyde,&pacmanX,laberintoAux,&pasillo1,&pasillo2,&ghostSpawn,&muertePacman,namnam,&match);
 
             //----SPAWN DE GUINDAS----//
             // Con un temporizador, ir spawneando las guindas.
@@ -287,6 +301,7 @@ int main(int argc, char* argv[]) {
             if (tiempoDeJuego >= 180) {
                 muertePacman = 1;
             }
+            match.gameTime = tiempoDeJuego;
 
             // IMPRIMIR LABERINTO
             SetConsoleTextAttribute(hConsole,GREEN);
@@ -303,7 +318,10 @@ int main(int argc, char* argv[]) {
             // Si Pacman pierde todas sus vidas, el flag de "finDelJuego" se vuelve 1, es decir, True.
             if (pacmanX.vidas == 0 || conteoPuntitosAux == 0) {
                 finDelJuego = 1;
+            } else {
+                match.scoreFinal = pacmanX.score;
             }
+
         }
 
         // INFORMAR SOBRE RESULTADO DE JUEGO
@@ -316,20 +334,29 @@ int main(int argc, char* argv[]) {
             Sleep(2000);
         }
 
-        // INFORMAR SOBRE ESTADISTICAS
-        /*
-            - Guardar Score en un Array (3 maximos Scores).
-            - Generar un archivo "resultados_XX.out" (XX representa el dia de la partida) con las siguientes estadisticas:
-                ● La cantidad de puntos pequeños que se comieron.
-                ● La cantidad de puntos grandes que se comieron.
-                ● La cantidad de veces que PacMan atacó a algún fantasma
-                ● La cantidad de muertes de PacMan
-                ● Puntaje obtenido
-                ● Tiempo Total de juego
-            - Las estadisticas anteriores tambien se deben mostrar al final del juego.
-            */
+        // INFORMAR SOBRE ESTADISTICAS Y GENERAR ARCHIVO "resultadosDD-MM-YY.out"
+        SetConsoleTextAttribute(hConsole,GREEN);
+
+        printStats(&match,totalGameTime);
+
+        generateStatsFile(&match,totalGameTime);
         
+        // Guardar en Array el Score e informar si es un nuevo record
+        int scoreGuardado = 0;
+        int i = 0;
+        while (i < 3 && scoreGuardado == 0) {
+            if (bestScores[i] < match.scoreFinal) {
+                if (bestScores[i] != 0) {
+                    printf("\n@ OBTUVISTE UN NUEVO RECORD! :D\n");
+                } 
+                bestScores[i] = match.scoreFinal;
+                scoreGuardado = 1;
+            }
+            i++;
+        }
+
         printf("\n\n0. Jugar otra vez\n1. Salir del Juego\nEscoja una opcion: ");
+        SetConsoleTextAttribute(hConsole,WHITE);
         scanf("%d",&salirDelJuego); 
     }
 

@@ -3,6 +3,7 @@
 #include <time.h>
 #include <conio.h>
 #include <windows.h>
+#include <string.h>
 
 // ---------------------------------------------------Estructuras------------------------------------------------------- //
 // --------------------------------------------------------------------------------------------------------------------- //
@@ -38,6 +39,7 @@ typedef struct datosDePartida{
     int muertes;
     int smallDots;
     int bigDots;
+    double gameTime;
 }matchData;
 
 // ---------------------------------------------------Funciones--------------------------------------------------------- //
@@ -46,6 +48,8 @@ typedef struct datosDePartida{
 char** crearMatriz(int filas, int columnas);
 
 char** copiarMatriz(int filas,int columnas,char** matrizOg);
+
+void initializeMatchStats(matchData* match,int id);
 
 void delimitarLaberinto(int filas,int columnas,char** laberint);
 
@@ -59,9 +63,9 @@ void initializeGhost(ghost* ghost,int spawnSpaces,time_t spawnTimer,cord ghostSp
 
 void letGhostSpawn(ghost* ghost,char** maze);
 
-void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namnam,int* segundosParaComer,time_t* timeToEat,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4,int* muertePacman);
+void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namnam,int* segundosParaComer,time_t* timeToEat,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4,int* muertePacman,matchData* match);
 
-void ghostMovement(ghost* ghost,pacman* pacman,char** maze,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,int* muertePacman,int namnam);
+void ghostMovement(ghost* ghost,pacman* pacman,char** maze,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,int* muertePacman,int namnam,matchData* match);
 
 void spawnGuindas(time_t* startGuindasTime,int guindasTimeSpawn,cord* pacmanSpawn,char** maze,int* segundosParaComer,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4);
 
@@ -70,5 +74,11 @@ void spawnPlatanos(time_t* startPlatanoTime,int platanoTimeSpawn,cord* pacmanSpa
 void userInput(pacman* pacman);
 
 void parpadeoTablero(int filas,int columnas,char** laberint,int param,pacman* pacman);
+
+void obtenerFechaActual(char* fecha);
+
+void printStats(matchData* match,double totalGameTime);
+
+void generateStatsFile(matchData* match,double totalGameTime);
 
 
