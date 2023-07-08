@@ -21,6 +21,7 @@ typedef struct pacman{
 }pacman;
 
 typedef struct fantasma{
+    char letra;
     cord coordenadas;
     int vx;
     int vy;
@@ -39,29 +40,35 @@ typedef struct datosDePartida{
     int bigDots;
 }matchData;
 
-// ---------------------------------------------------Funciones------------------------------------------------------- //
+// ---------------------------------------------------Funciones--------------------------------------------------------- //
 // --------------------------------------------------------------------------------------------------------------------- //
 
+char** crearMatriz(int filas, int columnas);
 
-void imprimirLaberinto(int filas, int columnas,char** laberint,int namnam);
+char** copiarMatriz(int filas,int columnas,char** matrizOg);
 
 void delimitarLaberinto(int filas,int columnas,char** laberint);
 
 void obtenerLaberinto(FILE* fp,int filas,int columnas,char** laberint,cord* pacmanSpawn,cord* ghostSpawn,cord* pasillo1,cord* pasillo2,int* conteoPuntitosEnMapa);
 
-char** crearMatriz(int filas, int columnas);
-
-void setCursorPosition(int x, int y);
-
-char** copiarMatriz(int filas,int columnas,char** matrizOg);
-
-void parpadeoTablero(int filas,int columnas,char** laberint,int param,pacman* pacman);
+void imprimirLaberinto(int filas, int columnas,char** laberint,int namnam);
 
 void initializePacman(pacman* pacman,cord* pacmanSpawn,int vidas);
 
 void initializeGhost(ghost* ghost,int spawnSpaces,time_t spawnTimer,cord ghostSpawn);
 
+void letGhostSpawn(ghost* ghost,char** maze);
+
+void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namnam,int* segundosParaComer,time_t* timeToEat,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4,int* muertePacman);
+
+void ghostMovement(ghost* ghost,pacman* pacman,char** maze,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,int* muertePacman,int namnam);
+
+void spawnGuindas(time_t* startGuindasTime,int guindasTimeSpawn,cord* pacmanSpawn,char** maze,int* segundosParaComer,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4);
+
+void spawnPlatanos(time_t* startPlatanoTime,int platanoTimeSpawn,cord* pacmanSpawn,char** maze,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4,cord* ghostSpawn);
+
 void userInput(pacman* pacman);
 
+void parpadeoTablero(int filas,int columnas,char** laberint,int param,pacman* pacman);
 
 

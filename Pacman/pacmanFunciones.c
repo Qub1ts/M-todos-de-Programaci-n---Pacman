@@ -13,43 +13,24 @@
 #define PURPLE 13
 #define WHITE 15
 
-
-// IMPRIMIR LABERINTO
-void imprimirLaberinto(int filas, int columnas,char** laberint,int namnam) {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE); // Conecta el codigo con la consola
-    for (int i=0;i<filas;i++){
-        for (int j=0;j<columnas;j++){
-            if (laberint[i][j] == 'C' || laberint[i][j] == '.' || laberint[i][j] == 'o') {
-                SetConsoleTextAttribute(hConsole,YELLOW);
-                printf("%c",laberint[i][j]);
-                SetConsoleTextAttribute(hConsole,WHITE);
-            } else if (laberint[i][j] == '#') {
-                SetConsoleTextAttribute(hConsole,BLUE);
-                printf("%c",laberint[i][j]);
-                SetConsoleTextAttribute(hConsole,WHITE);
-            } else if (laberint[i][j] == 'B' || laberint[i][j] == 'M' || laberint[i][j] == 'K' || laberint[i][j] == 'E') {
-                if (namnam == 0) {
-                    SetConsoleTextAttribute(hConsole,PURPLE);
-                    printf("%c",laberint[i][j]);
-                    SetConsoleTextAttribute(hConsole,WHITE);
-                } else {
-                    SetConsoleTextAttribute(hConsole,WHITE);
-                    printf("%c",laberint[i][j]);
-                }
-            } else if (laberint[i][j] == '6') {
-                SetConsoleTextAttribute(hConsole,RED);
-                printf("%c",laberint[i][j]);
-                SetConsoleTextAttribute(hConsole,WHITE);
-            } else if (laberint[i][j] == 'J') {
-                SetConsoleTextAttribute(hConsole,GREEN);
-                printf("%c",laberint[i][j]);
-                SetConsoleTextAttribute(hConsole,WHITE);
-            } else {
-                printf("%c",laberint[i][j]);
-            }
-        }
-        printf("\n");
+// FUNCIÓN PARA CREAR UNA MATRIZ 
+char** crearMatriz(int filas, int columnas) {
+    char** matriz = malloc(filas * sizeof(char*));
+    for (int i = 0; i < filas; i++) {
+        matriz[i] = malloc(columnas * sizeof(char));
     }
+    return matriz;
+}
+
+// COPIAR MATRIZ 
+char** copiarMatriz(int filas,int columnas,char** matrizOg) {
+    char** newMatriz = crearMatriz(filas,columnas);
+    for (int i = 0;i < filas;i++) {
+        for (int j = 0;j < columnas;j++) {
+            newMatriz[i][j] = matrizOg[i][j];
+        }
+    }
+    return newMatriz;
 }
 
 // DELIMITAR LABERINTO
@@ -116,46 +97,43 @@ void obtenerLaberinto(FILE* fp,int filas,int columnas,char** laberint,cord* pacm
     fclose(fp);
 }
 
-// Función para crear una matriz de punteros
-char** crearMatriz(int filas, int columnas) {
-    char** matriz = malloc(filas * sizeof(char*));
-    for (int i = 0; i < filas; i++) {
-        matriz[i] = malloc(columnas * sizeof(char));
-    }
-    return matriz;
-}
-
-// POSICIONA LO QUE SE IMPRIME EN CONSOLA
-void setCursorPosition(int x, int y) {
-    COORD coordinates = {x,y};
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coordinates);
-}
-
-// COPIAR MATRIZ
-char** copiarMatriz(int filas,int columnas,char** matrizOg) {
-    char** newMatriz = crearMatriz(filas,columnas);
-    for (int i = 0;i < filas;i++) {
-        for (int j = 0;j < columnas;j++) {
-            newMatriz[i][j] = matrizOg[i][j];
+// IMPRIMIR LABERINTO
+void imprimirLaberinto(int filas, int columnas,char** laberint,int namnam) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE); // Conecta el codigo con la consola
+    for (int i=0;i<filas;i++){
+        for (int j=0;j<columnas;j++){
+            if (laberint[i][j] == 'C' || laberint[i][j] == '.' || laberint[i][j] == 'o') {
+                SetConsoleTextAttribute(hConsole,YELLOW);
+                printf("%c",laberint[i][j]);
+                SetConsoleTextAttribute(hConsole,WHITE);
+            } else if (laberint[i][j] == '#') {
+                SetConsoleTextAttribute(hConsole,BLUE);
+                printf("%c",laberint[i][j]);
+                SetConsoleTextAttribute(hConsole,WHITE);
+            } else if (laberint[i][j] == 'B' || laberint[i][j] == 'M' || laberint[i][j] == 'K' || laberint[i][j] == 'E') {
+                if (namnam == 0) {
+                    SetConsoleTextAttribute(hConsole,PURPLE);
+                    printf("%c",laberint[i][j]);
+                    SetConsoleTextAttribute(hConsole,WHITE);
+                } else {
+                    SetConsoleTextAttribute(hConsole,WHITE);
+                    printf("%c",laberint[i][j]);
+                }
+            } else if (laberint[i][j] == '6') {
+                SetConsoleTextAttribute(hConsole,RED);
+                printf("%c",laberint[i][j]);
+                SetConsoleTextAttribute(hConsole,WHITE);
+            } else if (laberint[i][j] == 'J') {
+                SetConsoleTextAttribute(hConsole,GREEN);
+                printf("%c",laberint[i][j]);
+                SetConsoleTextAttribute(hConsole,WHITE);
+            } else {
+                printf("%c",laberint[i][j]);
+            }
         }
+        printf("\n");
     }
-    return newMatriz;
 }
-
-// PARPADEO DE TABLERO AL MORIR PACMAN
-void parpadeoTablero(int filas,int columnas,char** laberint,int param,pacman* pacman) {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
-    imprimirLaberinto(filas,columnas,laberint,param);
-    Sleep(300);system("cls");Sleep(300);
-    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
-    imprimirLaberinto(filas,columnas,laberint,param);
-    Sleep(300);system("cls");Sleep(300);
-    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
-    imprimirLaberinto(filas,columnas,laberint,param);
-    Sleep(300);system("cls");Sleep(300);
-}
-
 
 
 // INICIALIZAR PACMAN
@@ -176,6 +154,340 @@ void initializeGhost(ghost* ghost,int spawnSpaces,time_t spawnTimer,cord ghostSp
     ghost->vx = -1;
     ghost->vy = 0;
     ghost->spawnSpaces = spawnSpaces;
+}
+
+// PERMITE A LOS FANTASMAS SPAWNEAR
+void letGhostSpawn(ghost* ghost,char** maze) {
+    if (ghost->spawned == 0) {
+        double currentGameTime = time(NULL);
+        if (difftime(currentGameTime,ghost->spawnTimer) >= 4) {
+            ghost->spawnSpaces -= 1;
+            if (ghost->spawnSpaces == 0) {
+                maze[ghost->coordenadas.x][ghost->coordenadas.y] = 'B';
+                ghost->spawned = 1;
+            }
+        }   
+    }
+}
+
+// MOVIMIENTO DE PACMAN
+void pacmanMovement(pacman* pacman,char** maze,int* conteoPuntitosAux,int* namnam,int* segundosParaComer,time_t* timeToEat,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4,int* muertePacman) {
+    int lx,ly;
+    lx = pacman->coordenadas.x + pacman->vx;
+    ly = pacman->coordenadas.y + pacman->vy;
+
+    // PARED
+    if (maze[lx][ly] == '#') {
+        pacman->vx = 0;
+        pacman->vy = 0;
+    // PUNTO NORMAL 3
+    } else if (maze[lx][ly] == '.') {
+        pacman->score += 3;
+        (*conteoPuntitosAux) -= 1;
+        maze[lx][ly] = 'C';
+        maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+        pacman->coordenadas.x = lx;
+        pacman->coordenadas.y = ly;
+    // PUNTO GRANDE 7
+    } else if (maze[lx][ly] == 'o') {
+        pacman->score += 7;
+        (*conteoPuntitosAux) -= 1;
+        maze[lx][ly] = 'C';
+        maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+        pacman->coordenadas.x = lx;
+        pacman->coordenadas.y = ly;
+        (*namnam) = 1;
+        (*timeToEat) = time(NULL);
+    // GUINDA
+    } else if (maze[lx][ly] == '6') {
+        maze[lx][ly] = 'C';
+        maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+        pacman->coordenadas.x = lx;
+        pacman->coordenadas.y = ly;
+        (*segundosParaComer) += 2;
+    // PLATANO
+    } else if (maze[lx][ly] == 'J') {
+        maze[lx][ly] = 'C';
+        maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+        pacman->coordenadas.x = lx;
+        pacman->coordenadas.y = ly;
+        maze[ghost1->coordenadas.x][ghost1->coordenadas.y] = ghost1->comido;
+        maze[ghost2->coordenadas.x][ghost2->coordenadas.y] = ghost2->comido;
+        maze[ghost3->coordenadas.x][ghost3->coordenadas.y] = ghost3->comido;
+        maze[ghost4->coordenadas.x][ghost4->coordenadas.y] = ghost4->comido;
+        initializeGhost(ghost1,1,time(NULL),*ghostSpawn);
+        initializeGhost(ghost2,7,time(NULL),*ghostSpawn);
+        initializeGhost(ghost3,13,time(NULL),*ghostSpawn);
+        initializeGhost(ghost4,19,time(NULL),*ghostSpawn);
+    // PASILLO 1
+    } else if (lx == pasillo1->x && ly == pasillo1->y)  {
+        maze[pasillo2->x][pasillo2->y] = 'C';
+        maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+        pacman->coordenadas.x = pasillo2->x;
+        pacman->coordenadas.y = pasillo2->y;
+    // PASILLO 2    
+    } else if (lx == pasillo2->x && ly == pasillo2->y)  {
+        maze[pasillo1->x][pasillo1->y] = 'C';
+        maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+        pacman->coordenadas.x = pasillo1->x;
+        pacman->coordenadas.y = pasillo1->y;
+    // SPAWN DE FANTASMAS (NO DEBE PODER PASAR)
+    } else if (lx == ghostSpawn->x && ly == ghostSpawn->y) {
+        pacman->vx = 0;
+        pacman->vy = 0;
+    // ESPACIO LIBRE
+    } else if (maze[lx][ly] == ' ') {
+        maze[lx][ly] = 'C';
+        maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+        pacman->coordenadas.x = lx;
+        pacman->coordenadas.y = ly;
+    // COLISION CON FANTASMAS
+    } else if (maze[lx][ly] == ghost1->letra) {
+        if ((*namnam) == 0) {
+            maze[lx][ly] = ghost1->letra;
+            maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+            pacman->coordenadas.x = lx;
+            pacman->coordenadas.y = ly;
+            (*muertePacman) = 1;
+        } else {
+            pacman->score += 10;
+            if (ghost1->comido == '.') {
+                pacman->score += 3;
+                (*conteoPuntitosAux) -= 1;
+            } else if (ghost1->comido == 'o') {
+                pacman->score += 3;
+                (*conteoPuntitosAux) -= 1;
+            } else if (ghost1->comido == '6') {
+                (*segundosParaComer) += 2;
+            }
+            maze[lx][ly] = 'C';
+            maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+            pacman->coordenadas.x = lx;
+            pacman->coordenadas.y = ly;
+            initializeGhost(ghost1,1,time(NULL),*ghostSpawn);
+        }
+    } else if (maze[lx][ly] == ghost2->letra) {
+        if ((*namnam) == 0) {
+            maze[lx][ly] = ghost2->letra;
+            maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+            pacman->coordenadas.x = lx;
+            pacman->coordenadas.y = ly;
+            (*muertePacman) = 1;
+        } else {
+            pacman->score += 10;
+            if (ghost2->comido == '.') {
+                pacman->score += 3;
+                (*conteoPuntitosAux)  -= 1;
+            } else if (ghost2->comido == 'o') {
+                pacman->score += 3;
+                (*conteoPuntitosAux)  -= 1;
+            } else if (ghost2->comido == '6') {
+                (*segundosParaComer) += 2;
+            }
+            maze[lx][ly] = 'C';
+            maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+            pacman->coordenadas.x = lx;
+            pacman->coordenadas.y = ly;
+            initializeGhost(ghost2,7,time(NULL),*ghostSpawn);
+        }  
+    } else if (maze[lx][ly] == ghost3->letra) {
+        if ((*namnam) == 0) {
+            maze[lx][ly] = ghost3->letra;
+            maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+            pacman->coordenadas.x = lx;
+            pacman->coordenadas.y = ly;
+            (*muertePacman) = 1;
+        } else {
+            pacman->score += 10;
+            if (ghost3->comido == '.') {
+                pacman->score += 3;
+                (*conteoPuntitosAux)  -= 1;
+            } else if (ghost3->comido == 'o') {
+                pacman->score += 3;
+                (*conteoPuntitosAux) -= 1;
+            } else if (ghost3->comido == '6') {
+                (*segundosParaComer) += 2;
+            }
+            maze[lx][ly] = 'C';
+            maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+            pacman->coordenadas.x = lx;
+            pacman->coordenadas.y = ly;
+            initializeGhost(ghost3,13,time(NULL),*ghostSpawn);
+        } 
+    } else if (maze[lx][ly] == ghost4->letra) {
+        if (namnam == 0) {
+            maze[lx][ly] = ghost4->letra;
+            maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+            pacman->coordenadas.x = lx;
+            pacman->coordenadas.y = ly;
+            (*muertePacman) = 1;
+        } else {
+            pacman->score += 10;
+            if (ghost4->comido == '.') {
+                pacman->score += 3;
+                (*conteoPuntitosAux) -= 1;
+            } else if (ghost4->comido == 'o') {
+                pacman->score += 3;
+                (*conteoPuntitosAux) -= 1;
+            } else if (ghost4->comido == '6') {
+                (*segundosParaComer) += 2;
+            }
+            maze[lx][ly] = 'C';
+            maze[pacman->coordenadas.x][pacman->coordenadas.y] = ' ';
+            pacman->coordenadas.x = lx;
+            pacman->coordenadas.y = ly;
+            initializeGhost(ghost4,19,time(NULL),*ghostSpawn);
+        }   
+    }
+}
+
+// MOVIMIENTO DE LOS FANTASMAS
+void ghostMovement(ghost* ghost,pacman* pacman,char** maze,cord* pasillo1,cord* pasillo2,cord* ghostSpawn,int* muertePacman,int namnam) {
+    int arrayGhostMov[2] = {1,-1};
+    int gx,gy;
+    if (ghost->spawned == 1) {
+        gx = ghost->coordenadas.x + ghost->vx;
+        gy = ghost->coordenadas.y + ghost->vy;
+        // PARED
+        if (maze[gx][gy] == '#' || maze[gx][gy] == 'B' || maze[gx][gy] == 'M' || maze[gx][gy] == 'K' || maze[gx][gy] == 'E') {
+            if (ghost->vx != 0) {
+                ghost->vx = 0;
+                srand(time(NULL));
+                int rIndex = rand() % 2;
+                ghost->vy = arrayGhostMov[rIndex];
+            } else {
+                ghost->vy = 0;
+                srand(time(NULL));
+                int rIndex = rand() % 2;
+                ghost->vx = arrayGhostMov[rIndex];
+            }
+        // PUNTO NORMAL    
+        } else if (maze[gx][gy] == '.') {
+            maze[ghost->coordenadas.x][ghost->coordenadas.y] = ghost->comido;
+            maze[gx][gy] = ghost->letra;
+            ghost->comido = '.';
+            ghost->coordenadas.x = gx;
+            ghost->coordenadas.y = gy;
+        // PUNTO GRANDE 
+        } else if (maze[gx][gy] == 'o') {
+            maze[ghost->coordenadas.x][ghost->coordenadas.y] = ghost->comido;
+            maze[gx][gy] = ghost->letra;
+            ghost->comido = 'o';
+            ghost->coordenadas.x = gx;
+            ghost->coordenadas.y = gy;
+        // GUINDA
+        } else if (maze[gx][gy] == '6') {
+            maze[ghost->coordenadas.x][ghost->coordenadas.y] = ghost->comido;
+            maze[gx][gy] = ghost->letra;
+            ghost->comido = '6';
+            ghost->coordenadas.x = gx;
+            ghost->coordenadas.y = gy;
+        // PLATANO
+        } else if (maze[gx][gy] == 'J') {
+            maze[ghost->coordenadas.x][ghost->coordenadas.y] = ghost->comido;
+            maze[gx][gy] = ghost->letra;
+            ghost->comido = 'J';
+            ghost->coordenadas.x = gx;
+            ghost->coordenadas.y = gy;
+        // PASILLO 1
+        } else if (gx == pasillo1->x && gy == pasillo1->y)  {
+            maze[pasillo2->x][pasillo2->y] = ghost->letra;
+            maze[ghost->coordenadas.x][ghost->coordenadas.y] = ' ';
+            ghost->coordenadas.x = pasillo2->x;
+            ghost->coordenadas.y = pasillo2->y;
+        // PASILLO 2    
+        } else if (gx == pasillo2->x && gy == pasillo2->y)  {
+            maze[pasillo1->x][pasillo1->y] = ghost->letra;
+            maze[ghost->coordenadas.x][ghost->coordenadas.y] = ' ';
+            ghost->coordenadas.x = pasillo1->x;
+            ghost->coordenadas.y = pasillo1->y;
+        // SPAWN DE FANTASMAS (NO DEBE PODER PASAR)
+        } else if (gx == ghostSpawn->x && gy == ghostSpawn->y) {
+            ghost->vx = 0;
+            ghost->vy = -1;
+        // ESPACIO LIBRE
+        } else if (maze[gx][gy] == ' ') {
+            maze[ghost->coordenadas.x][ghost->coordenadas.y] = ghost->comido;
+            maze[gx][gy] = ghost->letra;
+            ghost->comido = ' ';
+            ghost->coordenadas.x = gx;
+            ghost->coordenadas.y = gy;
+        // COLISION CON PACMAN
+        } else if (maze[gx][gy] == 'C') {
+            if (namnam == 0) {
+                maze[ghost->coordenadas.x][ghost->coordenadas.y] = ghost->comido;
+                maze[gx][gy] = ghost->letra;
+                ghost->comido = ' ';
+                ghost->coordenadas.x = gx;
+                ghost->coordenadas.y = gy;
+                (*muertePacman) = 1;
+            } else {
+                maze[ghost->coordenadas.x][ghost->coordenadas.y] = ghost->comido;
+                maze[gx][gy] = 'C';
+                pacman->score += 10;
+                if (ghost->letra == 'B') {
+                    initializeGhost(ghost,1,time(NULL),*ghostSpawn);
+                } else if (ghost->letra == 'M') {
+                    initializeGhost(ghost,7,time(NULL),*ghostSpawn);
+                } else if (ghost->letra == 'K') {
+                    initializeGhost(ghost,13,time(NULL),*ghostSpawn);
+                } else {
+                    initializeGhost(ghost,19,time(NULL),*ghostSpawn);
+                }
+            }  
+        }
+    }
+}
+
+// SPAWNEO DE GUINDAS EN EL MAPA
+void spawnGuindas(time_t* startGuindasTime,int guindasTimeSpawn,cord* pacmanSpawn,char** maze,int* segundosParaComer,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4) {
+    time_t currentGameTime = time(NULL);
+    double tiempoDeGuinda = difftime(currentGameTime,(*startGuindasTime));
+    if (tiempoDeGuinda == guindasTimeSpawn) {
+        if (maze[pacmanSpawn->x][pacmanSpawn->y] == 'C') {
+            (*segundosParaComer) += 2;
+        } else if (maze[pacmanSpawn->x][pacmanSpawn->y] == ghost1->letra) {
+            ghost1->comido = '6';
+        } else if (maze[pacmanSpawn->x][pacmanSpawn->y] == ghost2->letra) {
+            ghost2->comido = '6';
+        } else if (maze[pacmanSpawn->x][pacmanSpawn->y] == ghost3->letra) {
+            ghost3->comido = '6';
+        } else if (maze[pacmanSpawn->x][pacmanSpawn->y] == ghost4->letra) {
+            ghost4->comido = '6';
+        } else {
+            maze[pacmanSpawn->x][pacmanSpawn->y] = '6';
+        }
+        (*startGuindasTime) = time(NULL);
+    }
+}
+
+// SPAWNEO DE PLATANOS EN EL MAPA
+void spawnPlatanos(time_t* startPlatanoTime,int platanoTimeSpawn,cord* pacmanSpawn,char** maze,ghost* ghost1,ghost* ghost2,ghost* ghost3,ghost* ghost4,cord* ghostSpawn) {
+    time_t currentGameTime = time(NULL);
+    double tiempoDePlatano = difftime(currentGameTime,(*startPlatanoTime));
+    if (tiempoDePlatano == platanoTimeSpawn) {
+        if (maze[pacmanSpawn->x][pacmanSpawn->y] == 'C') {
+            maze[ghost1->coordenadas.x][ghost1->coordenadas.y] = ghost1->comido;
+            maze[ghost2->coordenadas.x][ghost2->coordenadas.y] = ghost2->comido;
+            maze[ghost3->coordenadas.x][ghost3->coordenadas.y] = ghost3->comido;
+            maze[ghost4->coordenadas.x][ghost4->coordenadas.y] = ghost4->comido;  
+            initializeGhost(ghost1,1,time(NULL),*ghostSpawn);
+            initializeGhost(ghost2,7,time(NULL),*ghostSpawn);
+            initializeGhost(ghost3,13,time(NULL),*ghostSpawn);
+            initializeGhost(ghost4,19,time(NULL),*ghostSpawn);
+        } else if (maze[pacmanSpawn->x][pacmanSpawn->y] == ghost1->letra) {
+            ghost1->comido = 'J';
+        } else if (maze[pacmanSpawn->x][pacmanSpawn->y] == ghost2->letra) {
+            ghost2->comido = 'J';
+        } else if (maze[pacmanSpawn->x][pacmanSpawn->y] == ghost3->letra) {
+            ghost3->comido = 'J';
+        } else if (maze[pacmanSpawn->x][pacmanSpawn->y] == ghost4->letra) {
+            ghost4->comido = 'J';
+        } else {
+            maze[pacmanSpawn->x][pacmanSpawn->y] = 'J';
+        }
+        (*startPlatanoTime) = time(NULL);
+    }
 }
 
 // OBTIENE EL INPUT DEL USUARIO PARA CONTROLAR A PACMAN
@@ -205,3 +517,16 @@ void userInput(pacman* pacman) {
     }
 }
 
+// PARPADEO DE TABLERO AL MORIR PACMAN
+void parpadeoTablero(int filas,int columnas,char** laberint,int param,pacman* pacman) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
+    imprimirLaberinto(filas,columnas,laberint,param);
+    Sleep(300);system("cls");Sleep(300);
+    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
+    imprimirLaberinto(filas,columnas,laberint,param);
+    Sleep(300);system("cls");Sleep(300);
+    SetConsoleTextAttribute(hConsole,GREEN);printf("Score: %d   Vidas: %d\n",pacman->score,pacman->vidas);SetConsoleTextAttribute(hConsole,WHITE);
+    imprimirLaberinto(filas,columnas,laberint,param);
+    Sleep(300);system("cls");Sleep(300);
+}
