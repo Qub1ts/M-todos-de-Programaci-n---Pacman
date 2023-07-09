@@ -1,3 +1,7 @@
+// Autor: Julio Lucero Parra
+// Seccion: J-3
+// Profesora: Marcela Rivera
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
