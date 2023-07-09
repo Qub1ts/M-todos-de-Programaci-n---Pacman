@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
         int conteoPuntitosAux = conteoPuntitosEnMapa;
         double tiempoDeJuego;
         double tiempoDeComida;
-        double totalGameTime;
+        double totalGameTime = 0;
         // Es la frecuencia de tiempo en la cual spawnearan guindas
         int guindasTimeSpawn = (180/guindas) - 15;
         // Es la frecuencia de tiempo en la cual spawnearan platanos
@@ -317,6 +317,7 @@ int main(int argc, char* argv[]) {
 
             // Si Pacman pierde todas sus vidas, el flag de "finDelJuego" se vuelve 1, es decir, True.
             if (pacmanX.vidas == 0 || conteoPuntitosAux == 0) {
+                totalGameTime += match.gameTime;
                 finDelJuego = 1;
             } else {
                 match.scoreFinal = pacmanX.score;
